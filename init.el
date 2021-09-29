@@ -19,6 +19,8 @@
 
 ;; Make ESC quit prompts
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+;; Rebind global set
+(global-set-key (kbd "C-i") 'universal-argument)
 
 ;; Line number
 (column-number-mode)
@@ -30,19 +32,20 @@
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
 (desktop-save-mode 1)
-(set-face-attribute 'default nil :font "Fira Code" :height 110) ; Font
+; (set-face-attribute 'default nil :font "Fira Code" :height 110) ; Font
+(set-face-attribute 'default nil :font "Ubuntu Mono" :height 150) ; Font
 ; (whitespace-mode) ; See whitespaces
 
 ; Org setup
-; (setq org-image-actual-width nil)
 (setq org-startup-indented t
-      org-pretty-entities nil
-      org-hide-emphasis-markers t
+      ; org-hide-emphasis-markers t
       org-startup-with-inline-images t
+      org-latex-create-formula-image-program 'dvisvgm
+      ;org-latex-create-formula-image-program 'dvipng
+      ; org-pretty-entities nil
       org-image-actual-width '(300))
 
-; (setq org-latex-create-formula-image-program 'dvisvgm)
-(setq org-latex-create-formula-image-program 'dvipng)
+; (setq org-latex-create-formula-image-program 'dvipng)
 ;; Increase size of LaTeX fragment previews
 ; (plist-put org-format-latex-options :scale 2)
 ; (setq-default line-spacing 3)
