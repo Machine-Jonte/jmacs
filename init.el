@@ -33,6 +33,21 @@
 (set-face-attribute 'default nil :font "Fira Code" :height 110) ; Font
 ; (whitespace-mode) ; See whitespaces
 
+; Org setup
+; (setq org-image-actual-width nil)
+(setq org-startup-indented t
+      org-pretty-entities nil
+      org-hide-emphasis-markers t
+      org-startup-with-inline-images t
+      org-image-actual-width '(300))
+
+; (setq org-latex-create-formula-image-program 'dvisvgm)
+(setq org-latex-create-formula-image-program 'dvipng)
+;; Increase size of LaTeX fragment previews
+; (plist-put org-format-latex-options :scale 2)
+; (setq-default line-spacing 3)
+; (setq preview-image-type 'dvipng)
+
 
 ;; Initialize Package Sources
 (require 'package)
@@ -73,6 +88,17 @@
 
 
 ;; Install pkgs
+(use-package org-superstar
+      :config
+      (setq org-superstar-special-todo-items t)
+      (add-hook 'org-mode-hook (lambda ()
+                                 (org-superstar-mode 1))))
+(use-package org-appear
+    :hook (org-mode . org-appear-mode))
+(use-package smooth-scrolling)
+(require 'smooth-scrolling)
+(smooth-scrolling-mode 1)
+
 (use-package all-the-icons)
 (use-package command-log-mode) ; For displaying commands
 (use-package swiper) ; Fuzzy search in files
@@ -144,6 +170,7 @@
  "bb" '(counsel-ibuffer :which-key "switch buffer")
  "bh" '(previous-buffer :which-key "previous buffer")
  "bl" '(next-buffer :which-key "next buffer")
+ "bk" '(kill-buffer :which-key "kill buffer")
  "t" '(:ignore t :which-key "toggles")
  "tt" '(counsel-load-theme :which-key "choose theme"))
 
@@ -215,7 +242,7 @@
  '(jdee-db-spec-breakpoint-face-colors (cons "#1B2229" "#3f444a"))
  '(objed-cursor-color "#ff6c6b")
  '(package-selected-packages
-   '(exec-path-from-shell general helpful ivy-rich which-key rainbow-delimiters doom-modeline doom-themes counsel ayu-theme use-package swiper lsp-mode evil command-log-mode))
+   '(org-superstar org-appear smooth-scrolling exec-path-from-shell general helpful ivy-rich which-key rainbow-delimiters doom-modeline doom-themes counsel ayu-theme use-package swiper lsp-mode evil command-log-mode))
  '(pdf-view-midnight-colors (cons "#bbc2cf" "#282c34"))
  '(rustic-ansi-faces
    ["#282c34" "#ff6c6b" "#98be65" "#ECBE7B" "#51afef" "#c678dd" "#46D9FF" "#bbc2cf"])
