@@ -17,6 +17,9 @@
 (setq visible-bell nil)             ; Remove visible-bell
 (setq ring-bell-function 'ignore)   ; Remove sound (notification)
 
+;; Auto-refresh dired on file change
+(add-hook 'dired-mode-hook 'auto-revert-mode)
+
 ;; Make ESC quit prompts
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 ;; Rebind global set
@@ -33,6 +36,10 @@
 (global-set-key [(hyper z)] 'undo)
 (global-set-key [(hyper q)] 'save-buffers-kill-emacs)
 
+
+
+;; Mac related stuff
+;; Switch option and command key
 (setq mac-option-modifier 'meta)
 (setq mac-command-modifier 'hyper)
 ;; mac switch meta key
@@ -51,6 +58,11 @@
       )
     )
   )
+
+;; Open in finder
+(defun show-in-finder ()
+  (interactive)
+  (shell-command (concat "open -R " buffer-file-name)))
 
 
 ;; Line number
