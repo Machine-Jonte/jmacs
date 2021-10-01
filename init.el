@@ -11,16 +11,47 @@
 (scroll-bar-mode -1)                ; Disable visible scrollbar
 (tool-bar-mode -1)                  ; Disable the toolbar
 (tooltip-mode -1)                   ; Disable tooltips
-(set-fringe-mode 10)                ; Give some breathing room
+; (set-fringe-mode 10)                ; Give some breathing room
 
-(menu-bar-mode -1)                  ; Remove the menu bar
+(menu-bar-mode 1)                  ; Remove the menu bar
 (setq visible-bell nil)             ; Remove visible-bell
 (setq ring-bell-function 'ignore)   ; Remove sound (notification)
 
 ;; Make ESC quit prompts
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 ;; Rebind global set
-(global-set-key (kbd "C-i") 'universal-argument)
+;; (global-set-key (kbd "C-i") 'universal-argument)
+
+;; Switch option and command
+(global-set-key [(hyper a)] 'mark-whole-buffer)
+(global-set-key [(hyper v)] 'yank)
+(global-set-key [(hyper c)] 'kill-ring-save)
+(global-set-key [(hyper s)] 'save-buffer)
+(global-set-key [(hyper l)] 'goto-line)
+(global-set-key [(hyper w)]
+                (lambda () (interactive) (delete-window)))
+(global-set-key [(hyper z)] 'undo)
+(global-set-key [(hyper q)] 'save-buffers-kill-emacs)
+
+(setq mac-option-modifier 'meta)
+(setq mac-command-modifier 'hyper)
+;; mac switch meta key
+; see: https://gist.github.com/railwaycat/3498096
+(defun mac-switch-meta nil 
+  "switch meta between Option and Command"
+  (interactive)
+  (if (eq mac-option-modifier nil)
+      (progn
+	(setq mac-option-modifier 'meta)
+	(setq mac-command-modifier 'hyper)
+	)
+    (progn 
+      (setq mac-option-modifier nil)
+      (setq mac-command-modifier 'meta)
+      )
+    )
+  )
+
 
 ;; Line number
 (column-number-mode)
@@ -33,7 +64,8 @@
 
 (desktop-save-mode 1)
 ; (set-face-attribute 'default nil :font "Fira Code" :height 110) ; Font
-(set-face-attribute 'default nil :font "Ubuntu Mono" :height 150) ; Font
+; (set-face-attribute 'default nil :font "Ubuntu Mono" :height 150) ; Font
+(set-face-attribute 'default nil :font "Consolas" :height 150) ; Font
 ; (whitespace-mode) ; See whitespaces
 
 ; Org setup
@@ -41,16 +73,10 @@
       ; org-hide-emphasis-markers t
       org-startup-with-inline-images t
       org-latex-create-formula-image-program 'dvisvgm
-      ;org-latex-create-formula-image-program 'dvipng
+      ; org-latex-create-formula-image-program 'dvipng
       ; org-pretty-entities nil
       org-image-actual-width '(300))
-
-; (setq org-latex-create-formula-image-program 'dvipng)
-;; Increase size of LaTeX fragment previews
-; (plist-put org-format-latex-options :scale 2)
-; (setq-default line-spacing 3)
-; (setq preview-image-type 'dvipng)
-
+; (after! org (plist-put org-format-latex-options :scale 0.8))
 
 ;; Initialize Package Sources
 (require 'package)
@@ -82,15 +108,20 @@
 (require 'evil)
 (evil-mode 1)
 
-(define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
-(define-key evil-visual-state-map (kbd "C-u") 'evil-scroll-up)
-(define-key evil-insert-state-map (kbd "C-u")
+(define-key evil-normal-state-map (kbd "C-b") 'evil-scroll-up)
+(define-key evil-visual-state-map (kbd "C-b") 'evil-scroll-up)
+(define-key evil-insert-state-map (kbd "C-b")
   (lambda ()
     (interactive)
     (evil-delete (point-at-bol) (point))))
 
 
 ;; Install pkgs
+; (global-flycheck-mode)
+; (use-package flycheck
+;   :ensure t
+;   :init
+;   (global-flycheck-mode t))
 (use-package org-superstar
       :config
       (setq org-superstar-special-todo-items t)
@@ -113,7 +144,16 @@
 	 ("C-r" . 'counsel-minibuffer-history))
   :config
   (setq ivy-initial-inputs-alist nil))
-(use-package magit) ; Git
+
+(use-package magit
+  :commands (magit-status magit-get-current-branch)
+  :custom
+  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)) ; Git
+
+(use-package evil-collection
+  :after magit)
+(evil-collection-init)
+
 (use-package rainbow-delimiters ; Rainbow paranteses
   :hook (prog-mode . rainbow-delimiters-mode))
 (use-package ivy-rich
@@ -169,6 +209,8 @@
  "f" '(counsel-find-file :which-key "find file")
  "e" '(eval-last-sexp :which-key "eval last exp")
  "SPC" '(counsel-M-x :which-key "runs command")
+ "p" '(projectile-command-map :which-key "projectile command map")
+ "s" '(counsel-projectile-rg :which-key "search current project")
  "b" '(:ignore t :which-key "buffers")
  "bb" '(counsel-ibuffer :which-key "switch buffer")
  "bh" '(previous-buffer :which-key "previous buffer")
@@ -185,45 +227,35 @@
   (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize)))
 
-;; Language Server (LSP)
-;; (use-package ivy-xref
-;;   :straight t
-;;   :init (if (< emacs-major-version 27)
-;;           (setq xref-show-xrefs-function #'ivy-xref-show-xrefs)
-;;           (setq xref-show-definitions-function #'ivy-xref-show-defs)))
+(use-package projectile
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :custom ((projectile-completion-system 'ivy))
+  :bind-keymap
+  ("C-c p" . projectile-command-map)
+  :init
+  (when (file-directory-p "~/programming")
+    (setq projectile-project-search-path '("~/programming")))
+  (setq projectile-switch-project-action #'projectile-dired)
+  (setq projectile-enable-caching nil))
+
+; (use-package counsel-projectile
+;   :config (counsel-projectile-mode))
+
+(use-package lsp-mode
+  :commands lsp
+  :hook ((
+	  haskell-mode
+	  typescript-mode
+	  js2-mode
+	  web-mode) . lsp)
+  :bind (:map lsp-mode-map
+         ("TAB" . completion-at-point))
+  :custom (lsp-headerline-breadcrumb-enable nil))
 
 
-;; (use-package lsp-mode
-;;   :straight t
-;;   :commands lsp
-;;   :hook ((typescript-mode js2-mode web-mode) . lsp)
-;;   :bind (:map lsp-mode-map
-;;          ("TAB" . completion-at-point))
-;;   :custom (lsp-headerline-breadcrumb-enable nil))
-;; 
-;; (dw/leader-key-def
-;;   "l"  '(:ignore t :which-key "lsp")
-;;   "ld" 'xref-find-definitions
-;;   "lr" 'xref-find-references
-;;   "ln" 'lsp-ui-find-next-reference
-;;   "lp" 'lsp-ui-find-prev-reference
-;;   "ls" 'counsel-imenu
-;;   "le" 'lsp-ui-flycheck-list
-;;   "lS" 'lsp-ui-sideline-mode
-;;   "lX" 'lsp-execute-code-action)
-;; 
-;; (use-package lsp-ui
-;;   :straight t
-;;   :hook (lsp-mode . lsp-ui-mode)
-;;   :config
-;;   (setq lsp-ui-sideline-enable t)
-;;   (setq lsp-ui-sideline-show-hover nil)
-;;   (setq lsp-ui-doc-position 'bottom)
-;;   (lsp-ui-doc-show))
 
-;; (use-package lsp-ivy
-;;   :hook (lsp-mode . lsp-ivy-mode))
-
+;;; --- Custom set variables --- ;;;
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -245,7 +277,7 @@
  '(jdee-db-spec-breakpoint-face-colors (cons "#1B2229" "#3f444a"))
  '(objed-cursor-color "#ff6c6b")
  '(package-selected-packages
-   '(org-superstar org-appear smooth-scrolling exec-path-from-shell general helpful ivy-rich which-key rainbow-delimiters doom-modeline doom-themes counsel ayu-theme use-package swiper lsp-mode evil command-log-mode))
+   '(evil-collection evil-magit counsel-projectile projectile org-superstar org-appear smooth-scrolling exec-path-from-shell general helpful ivy-rich which-key rainbow-delimiters doom-modeline doom-themes counsel ayu-theme use-package swiper lsp-mode evil command-log-mode))
  '(pdf-view-midnight-colors (cons "#bbc2cf" "#282c34"))
  '(rustic-ansi-faces
    ["#282c34" "#ff6c6b" "#98be65" "#ECBE7B" "#51afef" "#c678dd" "#46D9FF" "#bbc2cf"])
