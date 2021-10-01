@@ -25,6 +25,15 @@
 ;; Rebind global set
 ;; (global-set-key (kbd "C-i") 'universal-argument)
 
+
+;; Fix smooth scrolling
+(setq redisplay-dont-pause t)
+; (setq redisplay-dont-pause t
+;   scroll-margin 1
+;   scroll-step 1
+;   scroll-conservatively 10000
+;   scroll-preserve-screen-position 1)
+
 ;; Switch option and command
 (global-set-key [(hyper a)] 'mark-whole-buffer)
 (global-set-key [(hyper v)] 'yank)
@@ -78,16 +87,18 @@
 ; (set-face-attribute 'default nil :font "Fira Code" :height 110) ; Font
 ; (set-face-attribute 'default nil :font "Ubuntu Mono" :height 150) ; Font
 (set-face-attribute 'default nil :font "Consolas" :height 150) ; Font
+(set-face-attribute 'fixed-pitch nil :font "Consolas" :height 150) ; Font
+(set-face-attribute 'variable-pitch nil :font "Cantarell" :height 170 :weight 'regular) ; Font
 ; (whitespace-mode) ; See whitespaces
 
 ; Org setup
-(setq org-startup-indented t
-      ; org-hide-emphasis-markers t
-      org-startup-with-inline-images t
-      org-latex-create-formula-image-program 'dvisvgm
-      ; org-latex-create-formula-image-program 'dvipng
-      ; org-pretty-entities nil
-      org-image-actual-width '(300))
+;(setq org-startup-indented t
+;      ; org-hide-emphasis-markers t
+;      org-startup-with-inline-images t
+;      org-latex-create-formula-image-program 'dvisvgm
+;      ; org-latex-create-formula-image-program 'dvipng
+;      ; org-pretty-entities nil
+;      org-image-actual-width '(300))
 ; (after! org (plist-put org-format-latex-options :scale 0.8))
 
 ;; Initialize Package Sources
@@ -106,27 +117,29 @@
   (package-install 'use-package))
 
 ;; Enable Evil
-; (use-package evil
-;   :init
-;   (setq evil-want-integration t)
-;   (setq evil-want-keybinding nil)
-;   (setq evil-want-C-u-scroll t)
-;   (setq evil-want-C-i-jump t)
-;   :hook (evil-mode . jmacs/evil-hook)
-;   :config
-;   (evil-mode 1))
-
-(use-package evil)
+(use-package evil
+  :init
+  (setq evil-want-keybinding nil)
+  (setq evil-want-C-i-jump t))
 (require 'evil)
 (evil-mode 1)
-
+(define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
 (define-key evil-normal-state-map (kbd "C-b") 'evil-scroll-up)
 (define-key evil-visual-state-map (kbd "C-b") 'evil-scroll-up)
 (define-key evil-insert-state-map (kbd "C-b")
   (lambda ()
     (interactive)
     (evil-delete (point-at-bol) (point))))
+(evil-global-set-key 'motion "j" 'evil-next-visual-line)
+(evil-global-set-key 'motion "k" 'evil-previous-visual-line)
 
+(evil-set-initial-state 'messages-buffer-mode 'normal)
+(evil-set-initial-state 'dashboard-mode 'normal)
+
+(use-package evil-collection
+  :after magit)
+
+(evil-collection-init)
 
 ;; Install pkgs
 ; (global-flycheck-mode)
@@ -134,13 +147,69 @@
 ;   :ensure t
 ;   :init
 ;   (global-flycheck-mode t))
+
+(defun jmacs/org-mode-setup ()
+  (org-indent-mode)
+  (variable-pitch-mode 1)
+  (auto-fill-mode 0)
+  (visual-line-mode 1))
+;  (setq evil-auto-indent nil))
+
+(use-package org
+  :hook (org-mode . jmacs/org-mode-setup)
+  :config
+  (setq org-ellipsis " ▼"
+	org-hide-emphasis-markers t))
+
 (use-package org-superstar
       :config
       (setq org-superstar-special-todo-items t)
       (add-hook 'org-mode-hook (lambda ()
                                  (org-superstar-mode 1))))
+
+(dolist (face '((org-level-1 . 1.2)
+		(org-level-2 . 1.1)
+		(org-level-3 . 1.05)
+		(org-level-4 . 1.0)
+		(org-level-5 . 1.1)
+		(org-level-6 . 1.1)
+		(org-level-7 . 1.1)
+		(org-level-8 . 1.1)))
+  (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
+
+
+(font-lock-add-keywords 'org-mode
+			'(("^ *\\([-]\\) "
+			   (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
 (use-package org-appear
     :hook (org-mode . org-appear-mode))
+
+(set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
+(set-face-attribute 'org-code nil :inherit '(shadow fixed-pitch))
+(set-face-attribute 'org-table nil :inherit '(shadow fixed-pitch))
+(set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
+(set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+(set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+(set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch)
+; (set-face-attribute 'org-special-keyboard nil :inherit '(font-lock-comment-face fixed-pitch))
+
+(defun jmacs/org-mode-visual-fill ()
+  (setq visual-fill-column-width 100
+	visual-fill-column-center-text t)
+  (visual-fill-column-mode 1))
+
+(use-package visual-fill-column
+  :hook (org-mode . jmacs/org-mode-visual-fill))
+
+
+
+
+
+
+
+
+
 (use-package smooth-scrolling)
 (require 'smooth-scrolling)
 (smooth-scrolling-mode 1)
@@ -162,9 +231,6 @@
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)) ; Git
 
-(use-package evil-collection
-  :after magit)
-(evil-collection-init)
 
 (use-package rainbow-delimiters ; Rainbow paranteses
   :hook (prog-mode . rainbow-delimiters-mode))
@@ -188,7 +254,7 @@
 
 ;; Themes
 (use-package doom-themes
-  :init (load-theme 'doom-ayu-mirage t))
+  :init (load-theme 'doom-one t))
 (use-package doom-modeline
   :ensure t
   :init (doom-modeline-mode 1))
@@ -221,6 +287,7 @@
  "f" '(counsel-find-file :which-key "find file")
  "e" '(eval-last-sexp :which-key "eval last exp")
  "SPC" '(counsel-M-x :which-key "runs command")
+ "g" '(magit :which-key "launch magit")
  "p" '(projectile-command-map :which-key "projectile command map")
  "s" '(counsel-projectile-rg :which-key "search current project")
  "b" '(:ignore t :which-key "buffers")
@@ -291,7 +358,7 @@
  '(jdee-db-spec-breakpoint-face-colors (cons "#1B2229" "#3f444a"))
  '(objed-cursor-color "#ff6c6b")
  '(package-selected-packages
-   '(forge evil-collection evil-magit counsel-projectile projectile org-superstar org-appear smooth-scrolling exec-path-from-shell general helpful ivy-rich which-key rainbow-delimiters doom-modeline doom-themes counsel ayu-theme use-package swiper lsp-mode evil command-log-mode))
+   '(visual-fill-column visual-fill visual-fill-mode forge evil-collection evil-magit counsel-projectile projectile org-superstar org-appear smooth-scrolling exec-path-from-shell general helpful ivy-rich which-key rainbow-delimiters doom-modeline doom-themes counsel ayu-theme use-package swiper lsp-mode evil command-log-mode))
  '(pdf-view-midnight-colors (cons "#bbc2cf" "#282c34"))
  '(rustic-ansi-faces
    ["#282c34" "#ff6c6b" "#98be65" "#ECBE7B" "#51afef" "#c678dd" "#46D9FF" "#bbc2cf"])
