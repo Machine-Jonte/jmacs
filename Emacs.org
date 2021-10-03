@@ -6,6 +6,7 @@
 (org-babel-tangle-file "~/.emacs.d/Emacs.org")
 
 * Basic UI Configuration
+** Simple Emacs Changes
 #+begin_src emacs-lisp
       (setq inhibit-startup-message t)
 
@@ -31,14 +32,14 @@
   (setq redisplay-dont-pause t)
 #+end_src
 
-* Font Configuration
+** Font Configuration
 #+begin_src emacs-lisp 
     (set-face-attribute 'default nil :font "Consolas" :height 150) ; Font
     (set-face-attribute 'fixed-pitch nil :font "Consolas" :height 150) ; Font
     (set-face-attribute 'variable-pitch nil :font "Cantarell" :height 170 :weight 'regular) ; Font
 #+end_src
 
-* Mac Changes
+* Mac Specific
 ** Switch Option and CMD
 #+begin_src emacs-lisp
   ;; Switch option and command
@@ -84,7 +85,7 @@
   (shell-command (concat "open -R " buffer-file-name)))
 #+end_src
 
-* Package Init
+* Package System Setup
 #+begin_src emacs-lisp
 ;; Initialize Package Sources
 (require 'package)
@@ -108,15 +109,10 @@
 (require 'smooth-scrolling)
 (smooth-scrolling-mode 1)
 #+end_src
-** Dired
+** Dired (auto refresh)
 #+begin_src emacs-lisp
 ;; Auto-refresh dired on file change
 (add-hook 'dired-mode-hook 'auto-revert-mode)
-#+end_src
-** Esc Quit Prompts
-#+begin_src emacs-lisp
-;; Make ESC quit prompts
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 #+end_src
 ** Split Swap
 #+begin_src emacs-lisp
@@ -138,8 +134,24 @@
 #+begin_src emacs-lisp
 (desktop-save-mode 1)
 #+end_src
-* Evil Mode
-** Init
+** exec-path-from-shell
+Shell fixes
+For help: https://github.com/pythonic-emacs/pyenv-mode/issues/32
+This fixes the problem of (e.g.) pyenv not found (.zshrc).
+#+begin_src emacs-lisp
+(use-package exec-path-from-shell
+  :config
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize)))
+#+end_src
+* Keybinding Configuration
+** Esc Quit Prompts
+#+begin_src emacs-lisp
+;; Make ESC quit prompts
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+#+end_src
+** Evil Mode
+*** Init
 #+begin_src emacs-lisp
 (use-package evil
   :init
@@ -148,7 +160,13 @@
 (require 'evil)
 (evil-mode 1)
 #+end_src
-** Fix Keys
+*** Start State
+#+begin_src emacs-lisp
+;; Changes what state evil starts in
+  (evil-set-initial-state 'messages-buffer-mode 'normal)
+  (evil-set-initial-state 'dashboard-mode 'normal)
+#+end_src
+*** Fix Move Up
 #+begin_src emacs-lisp
 (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
 (define-key evil-normal-state-map (kbd "C-b") 'evil-scroll-up)
@@ -158,19 +176,14 @@
     (interactive)
     (evil-delete (point-at-bol) (point))))
 #+end_src
-** j k - Visual
+*** Move j/k Visual (no line jump)
 #+begin_src emacs-lisp
 ;; Changes such that it moves naturally up and down (not skip lines from visiual perspective)
   (evil-global-set-key 'motion "j" 'evil-next-visual-line)
   (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
 #+end_src
-** Initial state
-#+begin_src emacs-lisp
-;; Changes what state evil starts in
-  (evil-set-initial-state 'messages-buffer-mode 'normal)
-  (evil-set-initial-state 'dashboard-mode 'normal)
-#+end_src
-** Evil Collection
+*** Evil Collection
+Fixes the keybinding of Evil for different packages.
 #+begin_src emacs-lisp
 ;; Updates the keys in certain modes (e.g. magit can use hjkl etc. etc.)
   (use-package evil-collection
@@ -178,15 +191,74 @@
     :config
     (evil-collection-init))
 #+end_src
-* Packages
-** no setup
+** Custom Keybindings
+*** General
+This is a helper package for setting custom keybindings.
 #+begin_src emacs-lisp
-  (use-package all-the-icons)
-  (use-package command-log-mode) ; For displaying commands
-  (use-package swiper) ; Fuzzy search in files
-  (use-package forge) ; Git interface (with example issues)
+(use-package general
+  :config
+  (general-evil-setup t)
+  (general-create-definer jmacs/leader-keys
+			  :keymaps '(normal insert visual emacs)
+			  :prefix "SPC"
+			  :global-prefix"C-SPC"))
 #+end_src
-** little setup 
+*** Keybindings::jmacs
+This is my personal keybindings.
+#+begin_src emacs-lisp
+(jmacs/leader-keys
+ "f" '(counsel-find-file :which-key "find file")
+ "e" '(eval-last-sexp :which-key "eval last exp")
+ "SPC" '(counsel-M-x :which-key "runs command")
+ "g" '(magit :which-key "magit")
+ "p" '(projectile-command-map :which-key "projectile command map")
+ "s" '(counsel-projectile-rg :which-key "search current project")
+ "d" '(dired :which-key "dired")
+ "b" '(:ignore t :which-key "buffers")
+ "bb" '(counsel-ibuffer :which-key "switch buffer")
+ "bl" '(ibuffer :which-key "list buffers")
+ "bk" '(kill-buffer :which-key "kill buffer")
+ "bs" '(hydra-buffer-switch/body :which-key "switch buffer quickly")
+ "bc" '(clean-buffer-list :which-key "clean unused buffers")
+ "t" '(:ignore t :which-key "toggles")
+ "tt" '(counsel-load-theme :which-key "choose theme")
+ "ts" '(hydra-text-scale/body :which-key "scale text")
+ "o" '(:ignore t :which-key "org")
+ "oa" '(org-agenda :which-key "agenda")
+ "os" '(org-agenda :which-key "schedule")
+ "od" '(org-agenda :which-key "deadline")
+ "ot" '(org-time-stamp :which-key "time-stamp"))
+#+end_src
+* Development
+** magit
+#+begin_src emacs-lisp
+(use-package magit
+  :commands (magit-status magit-get-current-branch)
+  :custom
+  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+(use-package forge) ; Git interface (with example issues)
+#+end_src 
+
+** projectile
+#+begin_src emacs-lisp
+(use-package projectile
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :custom ((projectile-completion-system 'ivy))
+  :bind-keymap
+  ("C-c p" . projectile-command-map)
+  :init
+  (when (file-directory-p "~/programming")
+    (setq projectile-project-search-path '("~/programming")))
+  (setq projectile-switch-project-action #'projectile-dired)
+  (setq projectile-enable-caching nil))
+#+end_src
+* Packages
+** Swiper (fuzzy search)
+#+begin_src emacs-lisp
+  (use-package swiper) ; Fuzzy search in files
+#+end_src
+** UI
 *** rainbow-delimiters
 #+begin_src emacs-lisp
   (use-package rainbow-delimiters ; Rainbow paranteses
@@ -224,27 +296,16 @@
   :init (doom-modeline-mode 1))
 #+end_src
 
-*** general
+*** Command Log
 #+begin_src emacs-lisp
-(use-package general
-  :config
-  (general-evil-setup t)
-  (general-create-definer jmacs/leader-keys
-			  :keymaps '(normal insert visual emacs)
-			  :prefix "SPC"
-			  :global-prefix"C-SPC"))
+  (use-package command-log-mode) ; For displaying commands
 #+end_src
-*** exec-path-from-shell
-Shell fixes
-For help: https://github.com/pythonic-emacs/pyenv-mode/issues/32
-This fixes the problem of (e.g.) pyenv not found (.zshrc).
+*** All the icons
 #+begin_src emacs-lisp
-(use-package exec-path-from-shell
-  :config
-  (when (memq window-system '(mac ns x))
-    (exec-path-from-shell-initialize)))
+  (use-package all-the-icons)
 #+end_src
-** counsel
+*** counsel
+This package shows extra information when running the command buffer (as what keybinding is bind to it).
 #+begin_src emacs-lisp
 (use-package counsel ; Some nice stuff (helper for M-x etc)
   :bind (("M-x" . counsel-M-x)
@@ -256,15 +317,6 @@ This fixes the problem of (e.g.) pyenv not found (.zshrc).
   (setq ivy-initial-inputs-alist nil))
 #+end_src
 
-** magit
-#+begin_src emacs-lisp
-(use-package magit
-  :commands (magit-status magit-get-current-branch)
-  :custom
-  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)) ; Git
-#+end_src 
-
-** ivy
 *** ivy
 #+begin_src emacs-lisp
 (use-package ivy
@@ -290,6 +342,7 @@ This fixes the problem of (e.g.) pyenv not found (.zshrc).
     (ivy-rich-mode 1))
 #+end_src
 ** hydra
+This package is good for writing quick functions.
 *** use-package
 #+begin_src emacs-lisp
 (use-package hydra)
@@ -311,20 +364,6 @@ This fixes the problem of (e.g.) pyenv not found (.zshrc).
   ("f" nil "finished" :exit t))
 #+end_src
 
-** projectile
-#+begin_src emacs-lisp
-(use-package projectile
-  :diminish projectile-mode
-  :config (projectile-mode)
-  :custom ((projectile-completion-system 'ivy))
-  :bind-keymap
-  ("C-c p" . projectile-command-map)
-  :init
-  (when (file-directory-p "~/programming")
-    (setq projectile-project-search-path '("~/programming")))
-  (setq projectile-switch-project-action #'projectile-dired)
-  (setq projectile-enable-caching nil))
-#+end_src
 * Org Mode
 ** Auto-tangle Configuration Files
 #+begin_src emacs-lisp
@@ -566,28 +605,3 @@ This fixes the problem of (e.g.) pyenv not found (.zshrc).
 (add-to-list 'org-structure-template-alist '("py" . "src python"))
 #+end_src
 
-* Custom Keybindings
-#+begin_src emacs-lisp
-(jmacs/leader-keys
- "f" '(counsel-find-file :which-key "find file")
- "e" '(eval-last-sexp :which-key "eval last exp")
- "SPC" '(counsel-M-x :which-key "runs command")
- "g" '(magit :which-key "magit")
- "p" '(projectile-command-map :which-key "projectile command map")
- "s" '(counsel-projectile-rg :which-key "search current project")
- "d" '(dired :which-key "dired")
- "b" '(:ignore t :which-key "buffers")
- "bb" '(counsel-ibuffer :which-key "switch buffer")
- "bl" '(ibuffer :which-key "list buffers")
- "bk" '(kill-buffer :which-key "kill buffer")
- "bs" '(hydra-buffer-switch/body :which-key "switch buffer quickly")
- "bc" '(clean-buffer-list :which-key "clean unused buffers")
- "t" '(:ignore t :which-key "toggles")
- "tt" '(counsel-load-theme :which-key "choose theme")
- "ts" '(hydra-text-scale/body :which-key "scale text")
- "o" '(:ignore t :which-key "org")
- "oa" '(org-agenda :which-key "agenda")
- "os" '(org-agenda :which-key "schedule")
- "od" '(org-agenda :which-key "deadline")
- "ot" '(org-time-stamp :which-key "time-stamp"))
-#+end_src

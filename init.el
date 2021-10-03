@@ -86,9 +86,6 @@
 ;; Auto-refresh dired on file change
 (add-hook 'dired-mode-hook 'auto-revert-mode)
 
-;; Make ESC quit prompts
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-
 (defun swap-split-direction nil
   (interactive)
   (if (eq split-height-threshold 0)
@@ -105,12 +102,24 @@
 
 (desktop-save-mode 1)
 
+(use-package exec-path-from-shell
+  :config
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize)))
+
+;; Make ESC quit prompts
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
 (use-package evil
   :init
   (setq evil-want-keybinding nil)
   (setq evil-want-C-i-jump t))
 (require 'evil)
 (evil-mode 1)
+
+;; Changes what state evil starts in
+  (evil-set-initial-state 'messages-buffer-mode 'normal)
+  (evil-set-initial-state 'dashboard-mode 'normal)
 
 (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
 (define-key evil-normal-state-map (kbd "C-b") 'evil-scroll-up)
@@ -124,20 +133,62 @@
   (evil-global-set-key 'motion "j" 'evil-next-visual-line)
   (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
 
-;; Changes what state evil starts in
-  (evil-set-initial-state 'messages-buffer-mode 'normal)
-  (evil-set-initial-state 'dashboard-mode 'normal)
-
 ;; Updates the keys in certain modes (e.g. magit can use hjkl etc. etc.)
   (use-package evil-collection
     :after (evil magit)
     :config
     (evil-collection-init))
 
-(use-package all-the-icons)
-(use-package command-log-mode) ; For displaying commands
-(use-package swiper) ; Fuzzy search in files
+(use-package general
+  :config
+  (general-evil-setup t)
+  (general-create-definer jmacs/leader-keys
+			  :keymaps '(normal insert visual emacs)
+			  :prefix "SPC"
+			  :global-prefix"C-SPC"))
+
+(jmacs/leader-keys
+ "f" '(counsel-find-file :which-key "find file")
+ "e" '(eval-last-sexp :which-key "eval last exp")
+ "SPC" '(counsel-M-x :which-key "runs command")
+ "g" '(magit :which-key "magit")
+ "p" '(projectile-command-map :which-key "projectile command map")
+ "s" '(counsel-projectile-rg :which-key "search current project")
+ "d" '(dired :which-key "dired")
+ "b" '(:ignore t :which-key "buffers")
+ "bb" '(counsel-ibuffer :which-key "switch buffer")
+ "bl" '(ibuffer :which-key "list buffers")
+ "bk" '(kill-buffer :which-key "kill buffer")
+ "bs" '(hydra-buffer-switch/body :which-key "switch buffer quickly")
+ "bc" '(clean-buffer-list :which-key "clean unused buffers")
+ "t" '(:ignore t :which-key "toggles")
+ "tt" '(counsel-load-theme :which-key "choose theme")
+ "ts" '(hydra-text-scale/body :which-key "scale text")
+ "o" '(:ignore t :which-key "org")
+ "oa" '(org-agenda :which-key "agenda")
+ "os" '(org-agenda :which-key "schedule")
+ "od" '(org-agenda :which-key "deadline")
+ "ot" '(org-time-stamp :which-key "time-stamp"))
+
+(use-package magit
+  :commands (magit-status magit-get-current-branch)
+  :custom
+  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 (use-package forge) ; Git interface (with example issues)
+
+(use-package projectile
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :custom ((projectile-completion-system 'ivy))
+  :bind-keymap
+  ("C-c p" . projectile-command-map)
+  :init
+  (when (file-directory-p "~/programming")
+    (setq projectile-project-search-path '("~/programming")))
+  (setq projectile-switch-project-action #'projectile-dired)
+  (setq projectile-enable-caching nil))
+
+(use-package swiper) ; Fuzzy search in files
 
 (use-package rainbow-delimiters ; Rainbow paranteses
   :hook (prog-mode . rainbow-delimiters-mode))
@@ -164,18 +215,9 @@
   :ensure t
   :init (doom-modeline-mode 1))
 
-(use-package general
-  :config
-  (general-evil-setup t)
-  (general-create-definer jmacs/leader-keys
-			  :keymaps '(normal insert visual emacs)
-			  :prefix "SPC"
-			  :global-prefix"C-SPC"))
+(use-package command-log-mode) ; For displaying commands
 
-(use-package exec-path-from-shell
-  :config
-  (when (memq window-system '(mac ns x))
-    (exec-path-from-shell-initialize)))
+(use-package all-the-icons)
 
 (use-package counsel ; Some nice stuff (helper for M-x etc)
   :bind (("M-x" . counsel-M-x)
@@ -185,11 +227,6 @@
 	 ("C-r" . 'counsel-minibuffer-history))
   :config
   (setq ivy-initial-inputs-alist nil))
-
-(use-package magit
-  :commands (magit-status magit-get-current-branch)
-  :custom
-  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)) ; Git
 
 (use-package ivy
   :init (ivy-mode 1)
@@ -224,18 +261,6 @@
   ("j" previous-buffer)
   ("k" next-buffer)
   ("f" nil "finished" :exit t))
-
-(use-package projectile
-  :diminish projectile-mode
-  :config (projectile-mode)
-  :custom ((projectile-completion-system 'ivy))
-  :bind-keymap
-  ("C-c p" . projectile-command-map)
-  :init
-  (when (file-directory-p "~/programming")
-    (setq projectile-project-search-path '("~/programming")))
-  (setq projectile-switch-project-action #'projectile-dired)
-  (setq projectile-enable-caching nil))
 
 ;; Automatically tangle the Emacs.org config file when it is saved
  (defun jmacs/org-babel-tangle-config ()
@@ -422,26 +447,3 @@
 (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
 (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
 (add-to-list 'org-structure-template-alist '("py" . "src python"))
-
-(jmacs/leader-keys
- "f" '(counsel-find-file :which-key "find file")
- "e" '(eval-last-sexp :which-key "eval last exp")
- "SPC" '(counsel-M-x :which-key "runs command")
- "g" '(magit :which-key "magit")
- "p" '(projectile-command-map :which-key "projectile command map")
- "s" '(counsel-projectile-rg :which-key "search current project")
- "d" '(dired :which-key "dired")
- "b" '(:ignore t :which-key "buffers")
- "bb" '(counsel-ibuffer :which-key "switch buffer")
- "bl" '(ibuffer :which-key "list buffers")
- "bk" '(kill-buffer :which-key "kill buffer")
- "bs" '(hydra-buffer-switch/body :which-key "switch buffer quickly")
- "bc" '(clean-buffer-list :which-key "clean unused buffers")
- "t" '(:ignore t :which-key "toggles")
- "tt" '(counsel-load-theme :which-key "choose theme")
- "ts" '(hydra-text-scale/body :which-key "scale text")
- "o" '(:ignore t :which-key "org")
- "oa" '(org-agenda :which-key "agenda")
- "os" '(org-agenda :which-key "schedule")
- "od" '(org-agenda :which-key "deadline")
- "ot" '(org-time-stamp :which-key "time-stamp"))
