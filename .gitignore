@@ -4,3 +4,5 @@
 # Except these
 !.gitignore
 !init.el
+!init-working.el
+!Emacs.org
