@@ -23,7 +23,13 @@
 
 (set-face-attribute 'default nil :font "Consolas" :height 150) ; Font
 (set-face-attribute 'fixed-pitch nil :font "Consolas" :height 150) ; Font
-(set-face-attribute 'variable-pitch nil :font "Cantarell" :height 170 :weight 'regular) ; Font
+(set-face-attribute 'variable-pitch nil :font "Cantarell" :height 150 :weight 'regular) ; Font
+
+;; set transparency
+(set-frame-parameter (selected-frame) 'alpha '(99 99))
+(add-to-list 'default-frame-alist '(alpha 99 99))
+
+(visual-line-mode t)
 
 ;; Switch option and command
 
@@ -129,6 +135,8 @@
     (interactive)
     (evil-delete (point-at-bol) (point))))
 
+(define-key evil-normal-state-map (kbd "gd") 'lsp-find-definition)
+
 ;; Changes such that it moves naturally up and down (not skip lines from visiual perspective)
   (evil-global-set-key 'motion "j" 'evil-next-visual-line)
   (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
@@ -164,11 +172,13 @@
  "t" '(:ignore t :which-key "toggles")
  "tt" '(counsel-load-theme :which-key "choose theme")
  "ts" '(hydra-text-scale/body :which-key "scale text")
+ ; "tf" '(hydra-code-level/body :which-key "Different fold level")
  "o" '(:ignore t :which-key "org")
  "oa" '(org-agenda :which-key "agenda")
  "os" '(org-agenda :which-key "schedule")
  "od" '(org-agenda :which-key "deadline")
  "ot" '(org-time-stamp :which-key "time-stamp"))
+ (global-set-key [(hyper p)] 'projectile-find-file)
 
 (use-package magit
   :commands (magit-status magit-get-current-branch)
@@ -188,43 +198,33 @@
   (setq projectile-switch-project-action #'projectile-dired)
   (setq projectile-enable-caching nil))
 
-(use-package lsp-mode
-  :commands (lsp lsp-deferred)
-  :init
-  (setq lsp-keymap-prefix "C-c l")
-  :custom
-  ;; what to use when checking on-save. "check" is default, I prefer clippy
-  ;; --- Rust ---
-  (lsp-rust-analyzer-cargo-watch-command "clippy")
-  (lsp-eldoc-render-all t)
-  (lsp-idle-delay 0.6)
-  (lsp-rust-analyzer-server-display-inlay-hints t)
-  ;; --- End Rust ---
-  :config
-  (lsp-enable-which-key-integration t)
-  (add-hook 'lsp-mode-hook 'lsp-ui-mode))
 
-(use-package lsp-ui
-  :commands lsp-ui-mode
-  :custom
-  (lsp-ui-peek-always-show t)
-  (lsp-ui-sideline-show-hover t)
-  (lsp-ui-doc-enable nil))
 
 (use-package company
-  :ensure
+  :after lsp-mode
+  :hook (lsp-mode . company-mode)
+  :bind (:map company-active-map
+              ("<tab>" . company-complete-selection))
+  (:map lsp-mode-map
+        ("<tab>" . company-indent-or-complete-common))
   :custom
-  (company-idle-delay 0.5) ;; how long to wait until popup
-  ;; (company-begin-commands nil) ;; uncomment to disable popup
-  :bind
-  (:map company-active-map
-              ("C-n". company-select-next)
-              ("C-p". company-select-previous)
-              ("M-<". company-select-first)
-              ("M->". company-select-last))
-  (:map company-mode-map
-  (("<tab>". tab-indent-or-complete)
-        ("TAB". tab-indent-or-complete))))
+  (company-minimum-prefix-length 1)
+  (company-idle-delay 0.0))
+
+; (use-package company
+;   :ensure
+;   :custom
+;   (company-idle-delay 0.5) ;; how long to wait until popup
+;   ;; (company-begin-commands nil) ;; uncomment to disable popup
+;   :bind
+;   (:map company-active-map
+;               ("C-n". company-select-next)
+;               ("C-p". company-select-previous)
+;               ("M-<". company-select-first)
+;               ("M->". company-select-last))
+;   (:map company-mode-map
+;   (("<tab>". tab-indent-or-complete)
+;         ("TAB". tab-indent-or-complete))))
 
 (use-package flycheck)
 
@@ -241,13 +241,6 @@
 ;    :config
 ;    (setq typescript-indent-level 2))
 
-;  (use-package rust-mode
-;    ; :mode "\\.rs\\'"
-;    :hook (rust-mode . lsp-deferred)
-;    :config
-;    (setq rust-format-on-save t)
-;    (lsp-rust-analyzer-inlay-hints-mode))
-
 (use-package rustic
   :ensure
   :bind (:map rustic-mode-map
@@ -261,9 +254,9 @@
               ("C-c C-c s" . lsp-rust-analyzer-status))
   :config
   ;; uncomment for less flashiness
-  ;; (setq lsp-eldoc-hook nil)
-  ;; (setq lsp-enable-symbol-highlighting nil)
-  ;; (setq lsp-signature-auto-activate nil)
+  (setq lsp-eldoc-hook nil)
+  (setq lsp-enable-symbol-highlighting nil)
+  (setq lsp-signature-auto-activate nil)
 
   ;; comment to disable rustfmt on save
   (setq rustic-format-on-save t)
@@ -298,7 +291,7 @@
   ([remap describe-variable] . counsel-describe-variable))
 
 (use-package doom-themes
-  :init (load-theme 'doom-one t))
+  :init (load-theme 'doom-dark+ t))
 
 (use-package doom-modeline
   :ensure t
@@ -350,6 +343,20 @@
   ("j" previous-buffer)
   ("k" next-buffer)
   ("f" nil "finished" :exit t))
+
+(defun code-level-value-changer (key-code)
+  (if "up"
+      ()))
+
+(defhydra hydra-code-level (:timeout 4)
+  "switch buffer"
+    ("j" (set-selective-display (- selective-display 1)))
+    ("k" (set-selective-display (+ selective-display 1)))
+    ("f" nil "finished" :exit t))
+
+; (set-selective-display nil)
+; (+ 1 selective-display)
+; ()
 
 ;; Automatically tangle the Emacs.org config file when it is saved
  (defun jmacs/org-babel-tangle-config ()
