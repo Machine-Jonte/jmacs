@@ -148,12 +148,13 @@
     (evil-collection-init))
 
 (use-package general
+  :init (general-auto-unbind-keys)
   :config
   (general-evil-setup t)
   (general-create-definer jmacs/leader-keys
-			  :keymaps '(normal insert visual emacs)
-			  :prefix "SPC"
-			  :global-prefix"C-SPC"))
+                          :keymaps '(normal insert visual emacs dired-mode-map)
+                          :prefix "SPC"
+                          :global-prefix "C-SPC"))
 
 (jmacs/leader-keys
  "f" '(counsel-find-file :which-key "find file")
@@ -179,6 +180,7 @@
  "od" '(org-agenda :which-key "deadline")
  "ot" '(org-time-stamp :which-key "time-stamp"))
  (global-set-key [(hyper p)] 'projectile-find-file)
+ (global-set-key [(hyper .)] 'flyspell-correct-wrapper)
 
 (use-package magit
   :commands (magit-status magit-get-current-branch)
@@ -226,7 +228,34 @@
 ;   (("<tab>". tab-indent-or-complete)
 ;         ("TAB". tab-indent-or-complete))))
 
-(use-package flycheck)
+(use-package flycheck
+  :config
+  (global-flycheck-mode t)
+  (setq flycheck-highlighting-mode t))
+(use-package flycheck-aspell)
+(use-package flymake-aspell)
+  ; (use-package flycheck-vale)
+  ; (flycheck-vale-setup)
+  ; (flycheck-vale-toggle-enabled)
+  ; (flycheck-checkers 'vale)
+  ; (setq flycheck-highlighting-mode t)
+
+(use-package flyspell)
+
+  ; Start flyspell-mode when text mode is started
+  (dolist (hook '(text-mode-hook))
+    (add-hook hook (lambda () (flyspell-mode 1))))
+
+  ; For mac to make it detect two finger click on words
+    (eval-after-load "flyspell"
+      '(progn
+         (define-key flyspell-mouse-map [down-mouse-3] #'flyspell-correct-word)
+         (define-key flyspell-mouse-map [mouse-3] #'undefined)))
+
+(use-package flyspell-correct-ivy
+    :bind ("C-." . flyspell-correct-wrapper)
+    :init
+    (setq flyspell-correct-interface #'flyspell-correct-ivy))
 
 (use-package yasnippet
   :ensure
@@ -270,6 +299,12 @@
   (when buffer-file-name
     (setq-local buffer-save-without-query t)))
 
+(use-package lsp-python-ms
+  :init (setq lsp-python-ms-auto-install-server t)
+  :hook (python-mode . (lambda ()
+                          (require 'lsp-python-ms)
+                          (lsp))))  ; or lsp-deferred
+
 (use-package swiper) ; Fuzzy search in files
 
 (use-package rainbow-delimiters ; Rainbow paranteses
@@ -295,7 +330,8 @@
 
 (use-package doom-modeline
   :ensure t
-  :init (doom-modeline-mode 1))
+  :init (doom-modeline-mode 1)
+  :config (setq doom-modeline-python-executable "python3"))
 
 (use-package command-log-mode) ; For displaying commands
 
