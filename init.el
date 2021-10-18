@@ -31,6 +31,8 @@
 
 (visual-line-mode t)
 
+(use-package neotree)
+
 ;; Switch option and command
 
 ;; Add extra/default MacOS commands to work with hyper key
@@ -152,7 +154,7 @@
   :config
   (general-evil-setup t)
   (general-create-definer jmacs/leader-keys
-                          :keymaps '(normal insert visual emacs dired-mode-map)
+                          :keymaps '(normal insert visual emacs dired-mode-map doc-view-mode-map)
                           :prefix "SPC"
                           :global-prefix "C-SPC"))
 
@@ -163,6 +165,7 @@
  "g" '(magit :which-key "magit")
  "p" '(projectile-command-map :which-key "projectile command map")
  "s" '(counsel-projectile-rg :which-key "search current project")
+ "ch" '(hippie-expand :which-key "Autocomplete file path")
  "d" '(dired :which-key "dired")
  "b" '(:ignore t :which-key "buffers")
  "bb" '(counsel-ibuffer :which-key "switch buffer")
@@ -180,7 +183,15 @@
  "od" '(org-agenda :which-key "deadline")
  "ot" '(org-time-stamp :which-key "time-stamp"))
  (global-set-key [(hyper p)] 'projectile-find-file)
+ (global-set-key [(hyper b)] 'neotree-toggle)
  (global-set-key [(hyper .)] 'flyspell-correct-wrapper)
+ (global-set-key [(hyper j)] 'shell-pop)
+
+(use-package pdf-tools)
+; (require 'doc-view-mode)
+; (define-key doc-view-mode-map "l" 'doc-view-next-line-or-next-page)
+; (define-key doc-view-mode-map "h" 'doc-view-previous-line-or-previous-page)
+; (define-key doc-view-mode-map (kbd "C-s") 'isearch-forward-regexp)
 
 (use-package magit
   :commands (magit-status magit-get-current-branch)
@@ -230,15 +241,21 @@
 
 (use-package flycheck
   :config
-  (global-flycheck-mode t)
-  (setq flycheck-highlighting-mode t))
-(use-package flycheck-aspell)
-(use-package flymake-aspell)
-  ; (use-package flycheck-vale)
-  ; (flycheck-vale-setup)
-  ; (flycheck-vale-toggle-enabled)
-  ; (flycheck-checkers 'vale)
-  ; (setq flycheck-highlighting-mode t)
+  ;; the default value was '(save idle-change new-line mode-enabled)
+  (setq flycheck-check-syntax-automatically '(save mode-enable)))
+
+; Old things
+; (use-package flycheck
+;   :config
+;   (global-flycheck-mode t)
+;   (setq flycheck-highlighting-mode t))
+; (use-package flycheck-aspell)
+; (use-package flymake-aspell)
+; (use-package flycheck-vale)
+; (flycheck-vale-setup)
+; (flycheck-vale-toggle-enabled)
+; (flycheck-checkers 'vale)
+; (setq flycheck-highlighting-mode t)
 
 (use-package flyspell)
 
@@ -305,6 +322,26 @@
                           (require 'lsp-python-ms)
                           (lsp))))  ; or lsp-deferred
 
+(use-package pyvenv
+  :defer t
+  :diminish
+  :config
+  (setenv "WORKON_HOME" "~/.pyenv/versions/")
+  ; Show python venv name in modeline
+      (setq pyvenv-mode-line-indicator '(pyvenv-virtual-env-name ("[venv:" pyvenv-virtual-env-name "] ")))
+      (pyvenv-mode t))
+
+(use-package lsp-haskell)
+(add-hook 'haskell-mode-hook #'lsp)
+(add-hook 'haskell-literate-mode-hook #'lsp)
+
+(use-package shell-pop
+  :config
+  (setq shell-pop-shell-type (quote ("ansi-term" "*ansi-term*" (lambda nil (ansi-term shell-pop-term-shell)))))
+  (setq shell-pop-term-shell "/bin/zsh")
+  ;; need to do this manually or not picked up by `shell-pop'
+  (shell-pop--set-shell-type 'shell-pop-shell-type shell-pop-shell-type))
+
 (use-package swiper) ; Fuzzy search in files
 
 (use-package rainbow-delimiters ; Rainbow paranteses
@@ -326,7 +363,7 @@
   ([remap describe-variable] . counsel-describe-variable))
 
 (use-package doom-themes
-  :init (load-theme 'doom-dark+ t))
+  :init (load-theme 'doom-one t))
 
 (use-package doom-modeline
   :ensure t
@@ -428,6 +465,7 @@
   (setq org-log-done 'time)
   (setq org-log-into-drawer t)
   (require 'org-faces)
+  (setq org-image-actual-width nil)
 
   (setq org-agenda-files
         '("~/.emacs.d/Tasks.org"

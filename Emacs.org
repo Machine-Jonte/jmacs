@@ -56,6 +56,10 @@ e.g. C-x C-f /sshx:<ssh config name>:PATH
 #+begin_src emacs-lisp
 (visual-line-mode t)
 #+end_src
+** Neo tree
+#+begin_src emacs-lisp
+(use-package neotree)
+#+end_src
 * Mac Specific
 ** Switch Option and CMD
 #+begin_src emacs-lisp
@@ -219,39 +223,51 @@ This is a helper package for setting custom keybindings.
       :config
       (general-evil-setup t)
       (general-create-definer jmacs/leader-keys
-                              :keymaps '(normal insert visual emacs dired-mode-map)
+                              :keymaps '(normal insert visual emacs dired-mode-map doc-view-mode-map)
                               :prefix "SPC"
                               :global-prefix "C-SPC"))
 #+end_src
 *** Keybindings::jmacs
 This is my personal keybindings.
 #+begin_src emacs-lisp
-(jmacs/leader-keys
- "f" '(counsel-find-file :which-key "find file")
- "e" '(eval-last-sexp :which-key "eval last exp")
- "SPC" '(counsel-M-x :which-key "runs command")
- "g" '(magit :which-key "magit")
- "p" '(projectile-command-map :which-key "projectile command map")
- "s" '(counsel-projectile-rg :which-key "search current project")
- "d" '(dired :which-key "dired")
- "b" '(:ignore t :which-key "buffers")
- "bb" '(counsel-ibuffer :which-key "switch buffer")
- "bl" '(ibuffer :which-key "list buffers")
- "bk" '(kill-buffer :which-key "kill buffer")
- "bs" '(hydra-buffer-switch/body :which-key "switch buffer quickly")
- "bc" '(clean-buffer-list :which-key "clean unused buffers")
- "t" '(:ignore t :which-key "toggles")
- "tt" '(counsel-load-theme :which-key "choose theme")
- "ts" '(hydra-text-scale/body :which-key "scale text")
- ; "tf" '(hydra-code-level/body :which-key "Different fold level")
- "o" '(:ignore t :which-key "org")
- "oa" '(org-agenda :which-key "agenda")
- "os" '(org-agenda :which-key "schedule")
- "od" '(org-agenda :which-key "deadline")
- "ot" '(org-time-stamp :which-key "time-stamp"))
- (global-set-key [(hyper p)] 'projectile-find-file)
- (global-set-key [(hyper .)] 'flyspell-correct-wrapper)
+  (jmacs/leader-keys
+   "f" '(counsel-find-file :which-key "find file")
+   "e" '(eval-last-sexp :which-key "eval last exp")
+   "SPC" '(counsel-M-x :which-key "runs command")
+   "g" '(magit :which-key "magit")
+   "p" '(projectile-command-map :which-key "projectile command map")
+   "s" '(counsel-projectile-rg :which-key "search current project")
+   "ch" '(hippie-expand :which-key "Autocomplete file path")
+   "d" '(dired :which-key "dired")
+   "b" '(:ignore t :which-key "buffers")
+   "bb" '(counsel-ibuffer :which-key "switch buffer")
+   "bl" '(ibuffer :which-key "list buffers")
+   "bk" '(kill-buffer :which-key "kill buffer")
+   "bs" '(hydra-buffer-switch/body :which-key "switch buffer quickly")
+   "bc" '(clean-buffer-list :which-key "clean unused buffers")
+   "t" '(:ignore t :which-key "toggles")
+   "tt" '(counsel-load-theme :which-key "choose theme")
+   "ts" '(hydra-text-scale/body :which-key "scale text")
+   ; "tf" '(hydra-code-level/body :which-key "Different fold level")
+   "o" '(:ignore t :which-key "org")
+   "oa" '(org-agenda :which-key "agenda")
+   "os" '(org-agenda :which-key "schedule")
+   "od" '(org-agenda :which-key "deadline")
+   "ot" '(org-time-stamp :which-key "time-stamp"))
+   (global-set-key [(hyper p)] 'projectile-find-file)
+   (global-set-key [(hyper b)] 'neotree-toggle)
+   (global-set-key [(hyper .)] 'flyspell-correct-wrapper)
+   (global-set-key [(hyper j)] 'shell-pop)
 #+end_src
+*** PDF
+#+begin_src emacs-lisp
+  (use-package pdf-tools)
+  ; (require 'doc-view-mode)
+  ; (define-key doc-view-mode-map "l" 'doc-view-next-line-or-next-page)
+  ; (define-key doc-view-mode-map "h" 'doc-view-previous-line-or-previous-page)
+  ; (define-key doc-view-mode-map (kbd "C-s") 'isearch-forward-regexp)
+#+end_src
+
 * Development
 ** Magit
 #+begin_src emacs-lisp
@@ -313,15 +329,22 @@ This is my personal keybindings.
 #+begin_src emacs-lisp
   (use-package flycheck
     :config
-    (global-flycheck-mode t)
-    (setq flycheck-highlighting-mode t))
-  (use-package flycheck-aspell)
-  (use-package flymake-aspell)
-    ; (use-package flycheck-vale)
-    ; (flycheck-vale-setup)
-    ; (flycheck-vale-toggle-enabled)
-    ; (flycheck-checkers 'vale)
-    ; (setq flycheck-highlighting-mode t)
+    ;; the default value was '(save idle-change new-line mode-enabled)
+    (setq flycheck-check-syntax-automatically '(save mode-enable)))
+  
+  ; Old things
+  ; (use-package flycheck
+  ;   :config
+  ;   (global-flycheck-mode t)
+  ;   (setq flycheck-highlighting-mode t))
+  ; (use-package flycheck-aspell)
+  ; (use-package flymake-aspell)
+  ; (use-package flycheck-vale)
+  ; (flycheck-vale-setup)
+  ; (flycheck-vale-toggle-enabled)
+  ; (flycheck-checkers 'vale)
+  ; (setq flycheck-highlighting-mode t)
+
 
 #+end_src
 *** Flyspell
@@ -402,6 +425,35 @@ it is better to use rustic (fork + extensions of rust-mode).
                           (require 'lsp-python-ms)
                           (lsp))))  ; or lsp-deferred
 #+end_src
+#+begin_src emacs-lisp
+    (use-package pyvenv
+      :defer t
+      :diminish
+      :config
+      (setenv "WORKON_HOME" "~/.pyenv/versions/")
+      ; Show python venv name in modeline
+          (setq pyvenv-mode-line-indicator '(pyvenv-virtual-env-name ("[venv:" pyvenv-virtual-env-name "] ")))
+          (pyvenv-mode t))
+#+end_src
+*** Haskell
+#+begin_src emacs-lisp
+(use-package lsp-haskell)
+(add-hook 'haskell-mode-hook #'lsp)
+(add-hook 'haskell-literate-mode-hook #'lsp)
+#+end_src
+** Electric
+#+begin_src emacs-lisp
+(electric-pair-mode 1)
+#+end_src>
+** Terminal
+#+begin_src emacs-lisp
+(use-package shell-pop
+  :config
+  (setq shell-pop-shell-type (quote ("ansi-term" "*ansi-term*" (lambda nil (ansi-term shell-pop-term-shell)))))
+  (setq shell-pop-term-shell "/bin/zsh")
+  ;; need to do this manually or not picked up by `shell-pop'
+  (shell-pop--set-shell-type 'shell-pop-shell-type shell-pop-shell-type))
+#+end_src
 * Packages
 ** Swiper (fuzzy search)
 #+begin_src emacs-lisp
@@ -436,7 +488,7 @@ it is better to use rustic (fork + extensions of rust-mode).
 **** doom-themes
 #+begin_src emacs-lisp
 (use-package doom-themes
-  :init (load-theme 'doom-dark+ t))
+  :init (load-theme 'doom-one t))
 #+end_src
 **** doom-modeline
 #+begin_src emacs-lisp
@@ -574,6 +626,7 @@ This package is good for writing quick functions.
     (setq org-log-done 'time)
     (setq org-log-into-drawer t)
     (require 'org-faces)
+    (setq org-image-actual-width nil)
 
     (setq org-agenda-files
           '("~/.emacs.d/Tasks.org"
