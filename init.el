@@ -186,6 +186,11 @@
  (global-set-key [(hyper b)] 'neotree-toggle)
  (global-set-key [(hyper .)] 'flyspell-correct-wrapper)
  (global-set-key [(hyper j)] 'shell-pop)
+ (global-set-key [(hyper =)] 'text-scale-increase)
+ (global-set-key [(hyper -)] 'text-scale-decrease)
+ (global-set-key [(hyper t)] 'tab-bar-switch-to-tab)
+ (global-set-key [(hyper T)] 'switch-to-buffer-other-tab)
+ (global-set-key [(hyper k)] 'tab-bar-switch-to-recent-tab)
 
 (use-package pdf-tools)
 ; (require 'doc-view-mode)
@@ -335,6 +340,8 @@
 (add-hook 'haskell-mode-hook #'lsp)
 (add-hook 'haskell-literate-mode-hook #'lsp)
 
+(use-package cmake-mode)
+
 (use-package shell-pop
   :config
   (setq shell-pop-shell-type (quote ("ansi-term" "*ansi-term*" (lambda nil (ansi-term shell-pop-term-shell)))))
@@ -363,7 +370,7 @@
   ([remap describe-variable] . counsel-describe-variable))
 
 (use-package doom-themes
-  :init (load-theme 'doom-one t))
+  :init (load-theme 'doom-moonlight t))
 
 (use-package doom-modeline
   :ensure t

@@ -258,6 +258,12 @@ This is my personal keybindings.
    (global-set-key [(hyper b)] 'neotree-toggle)
    (global-set-key [(hyper .)] 'flyspell-correct-wrapper)
    (global-set-key [(hyper j)] 'shell-pop)
+   (global-set-key [(hyper =)] 'text-scale-increase)
+   (global-set-key [(hyper -)] 'text-scale-decrease)
+   (global-set-key [(hyper t)] 'tab-bar-switch-to-tab)
+   (global-set-key [(hyper T)] 'switch-to-buffer-other-tab)
+   (global-set-key [(hyper k)] 'tab-bar-switch-to-recent-tab)
+
 #+end_src
 *** PDF
 #+begin_src emacs-lisp
@@ -441,6 +447,10 @@ it is better to use rustic (fork + extensions of rust-mode).
 (add-hook 'haskell-mode-hook #'lsp)
 (add-hook 'haskell-literate-mode-hook #'lsp)
 #+end_src
+*** C/C++
+#+begin_src emacs-lisp
+(use-package cmake-mode)
+#+end_src
 ** Electric
 #+begin_src emacs-lisp
 (electric-pair-mode 1)
@@ -488,7 +498,7 @@ it is better to use rustic (fork + extensions of rust-mode).
 **** doom-themes
 #+begin_src emacs-lisp
 (use-package doom-themes
-  :init (load-theme 'doom-one t))
+  :init (load-theme 'doom-moonlight t))
 #+end_src
 **** doom-modeline
 #+begin_src emacs-lisp
