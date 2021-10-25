@@ -155,7 +155,7 @@
   (general-evil-setup t)
   (general-create-definer jmacs/leader-keys
                           :keymaps '(normal insert visual emacs dired-mode-map doc-view-mode-map override)
-                          :prefix "C-n"
+                          :prefix "C-f"
                           :global-prefix "C-SPC"))
 
 (jmacs/leader-keys
@@ -349,6 +349,8 @@
   (setq shell-pop-term-shell "/bin/zsh")
   ;; need to do this manually or not picked up by `shell-pop'
   (shell-pop--set-shell-type 'shell-pop-shell-type shell-pop-shell-type))
+
+(use-package diff-hl)
 
 (use-package swiper) ; Fuzzy search in files
 

@@ -224,7 +224,7 @@ This is a helper package for setting custom keybindings.
       (general-evil-setup t)
       (general-create-definer jmacs/leader-keys
                               :keymaps '(normal insert visual emacs dired-mode-map doc-view-mode-map override)
-                              :prefix "C-n"
+                              :prefix "C-f"
                               :global-prefix "C-SPC"))
 #+end_src
 *** Keybindings::jmacs
@@ -465,6 +465,11 @@ it is better to use rustic (fork + extensions of rust-mode).
   ;; need to do this manually or not picked up by `shell-pop'
   (shell-pop--set-shell-type 'shell-pop-shell-type shell-pop-shell-type))
 #+end_src
+** Git 
+#+begin_src emacs-lisp
+  (use-package diff-hl)
+#+end_src
+
 * Packages
 ** Swiper (fuzzy search)
 #+begin_src emacs-lisp
