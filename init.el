@@ -154,7 +154,7 @@
   :config
   (general-evil-setup t)
   (general-create-definer jmacs/leader-keys
-                          :keymaps '(normal insert visual emacs dired-mode-map doc-view-mode-map)
+                          :keymaps '(normal insert visual emacs dired-mode-map doc-view-mode-map override)
                           :prefix "SPC"
                           :global-prefix "C-SPC"))
 
@@ -189,7 +189,7 @@
  (global-set-key [(hyper =)] 'text-scale-increase)
  (global-set-key [(hyper -)] 'text-scale-decrease)
  (global-set-key [(hyper t)] 'tab-bar-switch-to-tab)
- (global-set-key [(hyper T)] 'switch-to-buffer-other-tab)
+ (global-set-key [(hyper T)] 'tab-new)
  (global-set-key [(hyper k)] 'tab-bar-switch-to-recent-tab)
 
 (use-package pdf-tools)
