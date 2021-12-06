@@ -119,6 +119,9 @@ e.g. C-x C-f /sshx:<ssh config name>:PATH
 (unless package-archive-contents
   (package-refresh-contents))
 
+;; Always refresh, otherwise it is a bit annoying
+(package-refresh-contents)
+
 ;; Initialize use-package on non-Linux platforms
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
@@ -223,9 +226,9 @@ This is a helper package for setting custom keybindings.
       :config
       (general-evil-setup t)
       (general-create-definer jmacs/leader-keys
-                              :keymaps '(normal insert visual emacs dired-mode-map doc-view-mode-map override)
-                              :prefix "C-f"
-                              :global-prefix "C-SPC"))
+                              :keymaps '(normal insert visual emacs dired-mode-map doc-view-mode-map)
+                              :prefix "SPC"
+                              :global-prefix "C-f"))
 #+end_src
 *** Keybindings::jmacs
 This is my personal keybindings.
@@ -239,6 +242,7 @@ This is my personal keybindings.
    "s" '(counsel-projectile-rg :which-key "search current project")
    "ch" '(hippie-expand :which-key "Autocomplete file path")
    "d" '(dired :which-key "dired")
+   "r" '(ranger :which-key "ranger")
    "b" '(:ignore t :which-key "buffers")
    "bb" '(counsel-ibuffer :which-key "switch buffer")
    "bl" '(ibuffer :which-key "list buffers")
@@ -276,6 +280,10 @@ This is my personal keybindings.
 #+end_src
 
 * Development
+** Ranger
+#+begin_src emacs-lisp
+(use-package ranger)
+#+end_src
 ** Magit
 #+begin_src emacs-lisp
 (use-package magit
@@ -838,5 +846,6 @@ This package is good for writing quick functions.
 (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
 (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
 (add-to-list 'org-structure-template-alist '("py" . "src python"))
+(add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
 #+end_src
 

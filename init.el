@@ -83,6 +83,9 @@
 (unless package-archive-contents
   (package-refresh-contents))
 
+;; Always refresh, otherwise it is a bit annoying
+(package-refresh-contents)
+
 ;; Initialize use-package on non-Linux platforms
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
@@ -154,9 +157,9 @@
   :config
   (general-evil-setup t)
   (general-create-definer jmacs/leader-keys
-                          :keymaps '(normal insert visual emacs dired-mode-map doc-view-mode-map override)
-                          :prefix "C-f"
-                          :global-prefix "C-SPC"))
+                          :keymaps '(normal insert visual emacs dired-mode-map doc-view-mode-map)
+                          :prefix "SPC"
+                          :global-prefix "C-f"))
 
 (jmacs/leader-keys
  "f" '(counsel-find-file :which-key "find file")
@@ -167,6 +170,7 @@
  "s" '(counsel-projectile-rg :which-key "search current project")
  "ch" '(hippie-expand :which-key "Autocomplete file path")
  "d" '(dired :which-key "dired")
+ "r" '(ranger :which-key "ranger")
  "b" '(:ignore t :which-key "buffers")
  "bb" '(counsel-ibuffer :which-key "switch buffer")
  "bl" '(ibuffer :which-key "list buffers")
@@ -198,6 +202,8 @@
 ; (define-key doc-view-mode-map "l" 'doc-view-next-line-or-next-page)
 ; (define-key doc-view-mode-map "h" 'doc-view-previous-line-or-previous-page)
 ; (define-key doc-view-mode-map (kbd "C-s") 'isearch-forward-regexp)
+
+(use-package ranger)
 
 (use-package magit
   :commands (magit-status magit-get-current-branch)
@@ -627,3 +633,4 @@
 (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
 (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
 (add-to-list 'org-structure-template-alist '("py" . "src python"))
+(add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
